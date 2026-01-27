@@ -6,13 +6,15 @@
   "main": "index.js",
   "scripts": {
     "start": "node server",
-    "dev" : "node --watch server"
+    "dev": "node --watch server"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^5.2.1"
+    "bcryptjs": "^3.0.3",
+    "express": "^5.2.1",
+    "morgan": "^1.10.1"
   },
   "devDependencies": {
     "@prisma/client": "^5.22.0",

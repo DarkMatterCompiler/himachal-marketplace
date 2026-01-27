@@ -1,30 +1,24 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
-
+import morgan from 'morgan';
+import userRoutes from './src/routes/userRoutes.js';
+import sellerRoutes from './src/routes/sellerRoutes.js';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
-const prisma = new PrismaClient();
+// Middleware
+app.use(morgan('dev'));
+app.use(express.json()); 
 
-app.use(express.json());
+// Routes
+app.use('/api/users', userRoutes);
+app.use('/api/sellers', sellerRoutes);
 
-app.get('/' , (req , res) => {
-    res.send('Welcome to Himachal Marketplace API');
+
+app.get('/', (req, res) => {
+  res.send({ message: "Welcome to the Himachal Marketplace API!" });
 });
 
-app.get('/api/status', async (req, res) => {
-    try {
-        // Try to count how many users are in the DB (Should be 0 right now)
-        const userCount = await prisma.user.count(); 
-        res.json({ 
-            status: "Database Connected ✅", 
-            userCount: userCount 
-        });
-    } catch (error) {
-        res.status(500).json({ error: "Database Connection Failed ❌", details: error.message });
-    }
-});
 app.listen(PORT, () => {
-    console.log(`Server is running on port http://localhost:${PORT}`);
+  console.log(` Server running on http://localhost:${PORT}`);
 });

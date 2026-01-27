@@ -7,18 +7,34 @@
 // prisma/schema.prisma
 
 generator client {
-  provider = "prisma-client-js" // Changed from "prisma-client" to the standard JS client
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL") // <--- THIS WAS MISSING!
+  url      = env("DATABASE_URL")
 }
 
 model User {
   id          String   @id @default(uuid())
   email       String   @unique
   password    String
-  userType    String   // "Buyer", "Seller"
+  userType    String   // "Buyer" or "Seller"
   createdAt   DateTime @default(now())
+  
+  // RELATIONSHIP: A User *might* have one seller profile
+  // The '?' means it is optional (Buyers won't have one)
+  sellerProfile Seller?
+}
+
+model Seller {
+  id          String   @id @default(uuid())
+  bio         String
+  location    String   // e.g., "Kalpa Village, Kinnaur"
+  bankAccount String
+  taxId       String?  // Optional for small farmers
+  
+  // THE LINK: This connects Seller back to User
+  userId      String   @unique // @unique is CRITICAL for 1-to-1 relations
+  user        User     @relation(fields: [userId], references: [id])
 }
