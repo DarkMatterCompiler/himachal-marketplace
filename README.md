@@ -5,7 +5,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-5.x-000000?logo=express&logoColor=white)](https://expressjs.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Prisma](https://img.shields.io/badge/Prisma-7.x-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![Prisma](https://img.shields.io/badge/Prisma-5.x-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
 
 ---
 
@@ -39,7 +39,7 @@
 | **Runtime** | Node.js (v18+) |
 | **Framework** | Express.js 5.x |
 | **Database** | PostgreSQL |
-| **ORM** | Prisma 7.x |
+| **ORM** | Prisma 5.x |
 | **Security** | bcryptjs |
 | **Logging** | Morgan |
 
@@ -176,12 +176,23 @@ http://localhost:3000/api
 ```
 himachal-marketplace/
 ├── prisma/
-│   ├── schema.prisma      # Database schema
-│   └── migrations/        # Database migrations
-├── server/                # Express server entry point
-├── .env                   # Environment variables (not committed)
-├── package.json           # Dependencies and scripts
-├── prisma.config.ts       # Prisma configuration
+│   ├── schema.prisma          # Database schema
+│   └── migrations/            # Database migrations
+├── src/
+│   ├── controllers/
+│   │   ├── userController.js
+│   │   ├── sellerController.js
+│   │   ├── productController.js
+│   │   └── orderController.js
+│   ├── routes/
+│   │   ├── userRoutes.js
+│   │   ├── sellerRoutes.js
+│   │   ├── productRoutes.js
+│   │   └── orderRoutes.js
+│   └── db.js                  # Prisma client instance
+├── server.js                  # Express server entry point
+├── .env                       # Environment variables (not committed)
+├── package.json               # Dependencies and scripts
 └── README.md
 ```
 
