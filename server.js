@@ -2,6 +2,8 @@ import express from 'express';
 import morgan from 'morgan';
 import userRoutes from './src/routes/userRoutes.js';
 import sellerRoutes from './src/routes/sellerRoutes.js';
+import productRoutes from './src/routes/productRoutes.js';
+import orderRoutes from './src/routes/orderRoutes.js';
 
 const app = express();
 const PORT = 3000;
@@ -13,7 +15,8 @@ app.use(express.json());
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/sellers', sellerRoutes);
-
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
 
 app.get('/', (req, res) => {
   res.send({ message: "Welcome to the Himachal Marketplace API!" });

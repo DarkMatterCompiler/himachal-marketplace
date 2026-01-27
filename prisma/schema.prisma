@@ -25,6 +25,8 @@ model User {
   // RELATIONSHIP: A User *might* have one seller profile
   // The '?' means it is optional (Buyers won't have one)
   sellerProfile Seller?
+
+  orders      Order[]
 }
 
 model Seller {
@@ -37,4 +39,55 @@ model Seller {
   // THE LINK: This connects Seller back to User
   userId      String   @unique // @unique is CRITICAL for 1-to-1 relations
   user        User     @relation(fields: [userId], references: [id])
+
+  products    Product[]
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  price       Decimal  // Better than Float for money (more accurate)
+  category    String   // "Fruit", "Handicraft", etc.
+  stock       Int
+  
+
+  // Stores things like { "expiry": "2024-10-10", "sweetness": "High" }
+  attributes  Json     
+  
+  images      String[] // Array of image URLs
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt // Auto-updates when you edit
+
+  // RELATION: Link to Seller
+  sellerId    String
+  seller      Seller   @relation(fields: [sellerId], references: [id])
+
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  
+  totalAmount Decimal
+  status      String      @default("PENDING") // "PENDING", "COMPLETED"
+  
+  items       OrderItem[] // One order has many items
+  
+  createdAt   DateTime    @default(now())
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id])
+  
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  
+  quantity    Int
+  price       Decimal  // Price *at the time of sale*
 }
