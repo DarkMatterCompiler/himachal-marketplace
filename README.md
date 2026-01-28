@@ -40,8 +40,6 @@
 | **Framework** | Express.js 5.x |
 | **Database** | PostgreSQL |
 | **ORM** | Prisma 5.x |
-| **Security** | bcryptjs |
-| **Logging** | Morgan |
 
 ---
 
