@@ -1,0 +1,289 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Google Fonts Import - Elegant Serif + Clean Sans-Serif */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Work+Sans:wght@300;400;500;600;700&display=swap');
+
+body {
+    margin: 0;
+    font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Himachal Marketplace Design System */
+/* Light Mode (Day) - Organic, Earthy, Warm */
+/* Dark Mode (Night) - Luxurious, Premium, Deep */
+
+@layer base {
+    :root {
+        /* Light Mode - Warm Cream/Beige Palette */
+        --background: 35 33% 96%;
+        --foreground: 35 25% 15%;
+        
+        /* Cards - Soft white with warmth */
+        --card: 38 40% 98%;
+        --card-foreground: 35 25% 15%;
+        
+        /* Popover */
+        --popover: 38 40% 98%;
+        --popover-foreground: 35 25% 15%;
+        
+        /* Primary - Rose Blush (#D8A48F) */
+        --primary: 18 47% 71%;
+        --primary-foreground: 35 25% 15%;
+        
+        /* Secondary - Olive Petal (#A3A380) */
+        --secondary: 64 16% 57%;
+        --secondary-foreground: 35 25% 15%;
+        
+        /* Muted - Soft Beige */
+        --muted: 35 20% 92%;
+        --muted-foreground: 35 15% 45%;
+        
+        /* Accent - Golden Clover (#D7CE93) */
+        --accent: 49 47% 71%;
+        --accent-foreground: 35 25% 15%;
+        
+        /* Destructive */
+        --destructive: 0 72% 51%;
+        --destructive-foreground: 0 0% 98%;
+        
+        /* Borders & Inputs */
+        --border: 35 20% 85%;
+        --input: 35 20% 90%;
+        --ring: 18 47% 71%;
+        
+        /* Custom colors for Himachal palette */
+        --olive-petal: 64 16% 57%;
+        --golden-clover: 49 47% 71%;
+        --rose-blush: 18 47% 71%;
+        --peach-blossom: 350 31% 63%;
+        --warm-cream: 35 33% 96%;
+        --deep-olive: 64 25% 35%;
+        
+        /* Chart colors */
+        --chart-1: 18 47% 71%;
+        --chart-2: 64 16% 57%;
+        --chart-3: 49 47% 71%;
+        --chart-4: 350 31% 63%;
+        --chart-5: 35 25% 50%;
+        
+        /* Design System Tokens */
+        --radius: 1.25rem;
+        --radius-lg: 1.75rem;
+        --radius-xl: 2rem;
+        
+        /* Shadows */
+        --shadow-soft: 0 4px 20px -4px hsl(35 25% 15% / 0.08);
+        --shadow-elevated: 0 12px 40px -8px hsl(35 25% 15% / 0.12);
+        --shadow-float: 0 20px 60px -15px hsl(35 25% 15% / 0.15);
+        
+        /* Glassmorphism - Light Mode */
+        --glass-bg: hsl(38 40% 98% / 0.8);
+        --glass-border: hsl(35 20% 85% / 0.5);
+        --glass-blur: 16px;
+    }
+    
+    /* Dark Mode - Luxurious Night Palette */
+    .dark {
+        /* Night Black Background (#151515) */
+        --background: 0 0% 8%;
+        --foreground: 0 0% 88%;
+        
+        /* Cards - Deep with slight elevation */
+        --card: 0 0% 11%;
+        --card-foreground: 0 0% 88%;
+        
+        /* Popover */
+        --popover: 0 0% 11%;
+        --popover-foreground: 0 0% 88%;
+        
+        /* Primary - Deep Burgundy (#93032E) */
+        --primary: 345 95% 30%;
+        --primary-foreground: 0 0% 98%;
+        
+        /* Secondary - Burgundy Red (#6D001A) */
+        --secondary: 346 100% 21%;
+        --secondary-foreground: 0 0% 98%;
+        
+        /* Muted */
+        --muted: 0 0% 15%;
+        --muted-foreground: 0 0% 60%;
+        
+        /* Accent - Burgundy glow */
+        --accent: 345 80% 35%;
+        --accent-foreground: 0 0% 98%;
+        
+        /* Destructive */
+        --destructive: 0 72% 45%;
+        --destructive-foreground: 0 0% 98%;
+        
+        /* Borders & Inputs */
+        --border: 0 0% 18%;
+        --input: 0 0% 15%;
+        --ring: 345 95% 30%;
+        
+        /* Custom colors for Dark Himachal palette */
+        --deep-burgundy: 345 95% 30%;
+        --burgundy-red: 346 100% 21%;
+        --burgundy-glow: 345 80% 45%;
+        --night-black: 0 0% 8%;
+        --off-white: 0 0% 88%;
+        
+        /* Chart colors - Dark mode */
+        --chart-1: 345 95% 40%;
+        --chart-2: 346 100% 30%;
+        --chart-3: 345 80% 50%;
+        --chart-4: 0 70% 45%;
+        --chart-5: 340 60% 55%;
+        
+        /* Glassmorphism - Dark Mode */
+        --glass-bg: hsl(0 0% 11% / 0.7);
+        --glass-border: hsl(345 95% 30% / 0.3);
+        --glass-blur: 20px;
+        
+        /* Shadows - Dark mode */
+        --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.4);
+        --shadow-elevated: 0 12px 40px -8px hsl(0 0% 0% / 0.5);
+        --shadow-float: 0 20px 60px -15px hsl(345 95% 30% / 0.3);
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground font-sans antialiased;
+    }
+    
+    /* Typography - Elegant Serif for headings */
+    h1, h2, h3, h4, h5, h6 {
+        @apply font-serif;
+    }
+    
+    /* Smooth scrolling */
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
+/* Custom Utility Classes */
+@layer utilities {
+    /* Glass card effect */
+    .glass-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(var(--glass-blur));
+        -webkit-backdrop-filter: blur(var(--glass-blur));
+        border: 1px solid var(--glass-border);
+    }
+    
+    /* Floating animation */
+    .floating {
+        animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    /* Glow effect for dark mode */
+    .dark .glow-line {
+        box-shadow: 0 0 20px hsl(var(--deep-burgundy) / 0.5),
+                    0 0 40px hsl(var(--deep-burgundy) / 0.3);
+    }
+    
+    /* Parallax container */
+    .parallax-container {
+        perspective: 1000px;
+        transform-style: preserve-3d;
+    }
+    
+    /* Gradient text */
+    .gradient-text {
+        background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    /* Product card hover effect */
+    .product-hover {
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                    box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .product-hover:hover {
+        transform: translateY(-8px);
+    }
+    
+    /* Shimmer loading effect */
+    .shimmer {
+        background: linear-gradient(90deg, 
+            hsl(var(--muted)) 0%, 
+            hsl(var(--card)) 50%, 
+            hsl(var(--muted)) 100%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+    }
+    
+    @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+    
+    /* Hide scrollbar but keep functionality */
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    
+    /* Custom selection color */
+    ::selection {
+        background: hsl(var(--primary) / 0.3);
+        color: hsl(var(--foreground));
+    }
+}
+
+@layer base {
+    [data-debug-wrapper="true"] {
+        display: contents !important;
+    }
+
+    [data-debug-wrapper="true"] > * {
+        margin-left: inherit;
+        margin-right: inherit;
+        margin-top: inherit;
+        margin-bottom: inherit;
+        padding-left: inherit;
+        padding-right: inherit;
+        padding-top: inherit;
+        padding-bottom: inherit;
+        column-gap: inherit;
+        row-gap: inherit;
+        gap: inherit;
+        border-left-width: inherit;
+        border-right-width: inherit;
+        border-top-width: inherit;
+        border-bottom-width: inherit;
+        border-left-style: inherit;
+        border-right-style: inherit;
+        border-top-style: inherit;
+        border-bottom-style: inherit;
+        border-left-color: inherit;
+        border-right-color: inherit;
+        border-top-color: inherit;
+        border-bottom-color: inherit;
+    }
+}
