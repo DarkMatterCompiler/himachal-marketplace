@@ -4,13 +4,42 @@ import { motion } from 'framer-motion';
 import { Card } from 'components/ui/card';
 import { Badge } from 'components/ui/badge';
 import { Button } from 'components/ui/button';
-import { Star, Heart, ShoppingBag, Eye } from 'lucide-react';
+import { Star, Heart, ShoppingBag, Eye, Loader2 } from 'lucide-react';
+import { useAuth } from 'context/AuthContext';
+import { cartAPI } from 'services/api';
+import { toast } from 'sonner';
 
 export const ProductCard = ({ product, index = 0 }) => {
+  const { isAuthenticated } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(false);
 
-  const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+  // Use basePrice from API
+  const price = product.basePrice || product.price;
+  const inStock = product.inStock !== undefined ? product.inStock : product.totalStock > 0;
+
+  const handleAddToCart = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      toast.error('Please login to add items to cart');
+      return;
+    }
+
+    setAddingToCart(true);
+    try {
+      await cartAPI.add(product.id, 1);
+      toast.success('Added to cart successfully');
+      window.dispatchEvent(new Event('cartUpdated'));
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast.error(error.response?.data?.error || 'Failed to add to cart');
+    } finally {
+      setAddingToCart(false);
+    }
+  };
 
   return (
     <motion.div
@@ -25,13 +54,16 @@ export const ProductCard = ({ product, index = 0 }) => {
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Image Container */}
-        <div className="relative aspect-[4/5] overflow-hidden">
+        <div className="relative aspect-[4/5] overflow-hidden bg-muted">
           <motion.img
-            src={product.image}
+            src={product.imageUrl || product.image || 'https://images.unsplash.com/photo-1603189864361-0cc65b5ecd3a?w=600&q=80'}
             alt={product.name}
             className="w-full h-full object-cover"
             animate={{ scale: isHovered ? 1.05 : 1 }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
+            onError={(e) => {
+              e.target.src = 'https://images.unsplash.com/photo-1603189864361-0cc65b5ecd3a?w=600&q=80'; // Fallback
+            }}
           />
           
           {/* Overlay on Hover */}
@@ -48,10 +80,10 @@ export const ProductCard = ({ product, index = 0 }) => {
             </Badge>
           )}
 
-          {/* Discount Badge */}
-          {discount > 0 && (
-            <Badge className="absolute top-4 right-4 bg-accent text-accent-foreground font-medium px-3 py-1">
-              -{discount}%
+          {/* Stock Badge */}
+          {!inStock && (
+            <Badge className="absolute top-4 right-4 bg-destructive text-destructive-foreground font-medium px-3 py-1">
+              Out of Stock
             </Badge>
           )}
 
@@ -82,9 +114,17 @@ export const ProductCard = ({ product, index = 0 }) => {
               variant="glass" 
               size="sm" 
               className="flex-1 bg-card/90 backdrop-blur-sm"
+              onClick={handleAddToCart}
+              disabled={addingToCart}
             >
-              <ShoppingBag className="w-4 h-4 mr-1" />
-              Add to Cart
+              {addingToCart ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <ShoppingBag className="w-4 h-4 mr-1" />
+                  Add to Cart
+                </>
+              )}
             </Button>
             <Link to={`/product/${product.id}`}>
               <Button 
@@ -102,7 +142,7 @@ export const ProductCard = ({ product, index = 0 }) => {
         <div className="p-5">
           {/* Category */}
           <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
-            {product.category}
+            {product.category?.categoryName || product.category}
           </p>
           
           {/* Name */}
@@ -130,20 +170,20 @@ export const ProductCard = ({ product, index = 0 }) => {
           {/* Price */}
           <div className="flex items-center gap-3">
             <span className="font-semibold text-lg text-foreground">
-              ₹{product.price.toLocaleString()}
+              ₹{price.toLocaleString()}
             </span>
-            {product.originalPrice > product.price && (
-              <span className="text-sm text-muted-foreground line-through">
-                ₹{product.originalPrice.toLocaleString()}
-              </span>
+            {!inStock && (
+              <Badge variant="destructive" className="ml-2">Out of Stock</Badge>
             )}
           </div>
 
           {/* Origin */}
-          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-secondary" />
-            {product.origin}
-          </p>
+          {product.seller && (
+            <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-secondary" />
+              {product.seller.locationVillage}
+            </p>
+          )}
         </div>
       </Card>
     </motion.div>

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from 'context/ThemeContext';
+import { useAuth } from 'context/AuthContext';
+import { AuthDialog } from 'components/AuthDialog';
 import { Button } from 'components/ui/button';
 import { Badge } from 'components/ui/badge';
 import { 
@@ -11,14 +13,21 @@ import {
   Search, 
   Menu, 
   X,
-  Mountain
+  Mountain,
+  User,
+  LogOut,
+  Package,
+  LayoutDashboard,
+  History
 } from 'lucide-react';
 
 export const Navbar = () => {
   const { theme, toggleTheme } = useTheme();
+  const { user, isAuthenticated, isSeller, isAdmin, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [cartCount] = useState(3);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
   const location = useLocation();
 
   useEffect(() => {
@@ -29,12 +38,57 @@ export const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navLinks = [
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCartCount();
+    } else {
+      setCartCount(0);
+    }
+  }, [isAuthenticated, location]);
+
+  useEffect(() => {
+    // Listen for cart updates
+    const handleCartUpdate = () => {
+      if (isAuthenticated) {
+        fetchCartCount();
+      }
+    };
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
+  }, [isAuthenticated]);
+
+  const fetchCartCount = async () => {
+    try {
+      const count = await import('services/api').then(m => m.cartAPI.getCount());
+      setCartCount(count);
+    } catch (error) {
+      console.error('Error fetching cart count:', error);
+      setCartCount(0);
+    }
+  };
+
+  const buyerLinks = [
     { name: 'Home', path: '/' },
     { name: 'Products', path: '/products' },
     { name: 'Categories', path: '/categories' },
     { name: 'Our Story', path: '/story' },
   ];
+
+  const sellerLinks = [
+    { name: 'Dashboard', path: '/seller/dashboard' },
+    { name: 'Products', path: '/seller/products' },
+    { name: 'Orders', path: '/seller/orders' },
+    { name: 'Payouts', path: '/seller/payouts' },
+  ];
+
+  const adminLinks = [
+    { name: 'Dashboard', path: '/admin/dashboard' },
+    { name: 'Seller Verification', path: '/admin/seller-verification' },
+    { name: 'Commissions', path: '/admin/commission-management' },
+    { name: 'Payouts', path: '/admin/payout-approval' },
+  ];
+
+  const navLinks = isAdmin ? adminLinks : isSeller ? sellerLinks : buyerLinks;
 
   return (
     <>
@@ -130,14 +184,54 @@ export const Navbar = () => {
               </Button>
 
               {/* Cart */}
-              <Button variant="ghost" size="icon" className="relative">
-                <ShoppingBag className="w-5 h-5" />
-                {cartCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center text-[10px] bg-primary text-primary-foreground">
-                    {cartCount}
-                  </Badge>
-                )}
-              </Button>
+              <Link to="/cart">
+                <Button variant="ghost" size="icon" className="relative">
+                  <ShoppingBag className="w-5 h-5" />
+                  {cartCount > 0 && (
+                    <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center text-[10px] bg-primary text-primary-foreground">
+                      {cartCount}
+                    </Badge>
+                  )}
+                </Button>
+              </Link>
+
+              {/* User Menu */}
+              {isAuthenticated ? (
+                <>
+                  <Link to="/profile" className="hidden sm:block">
+                    <Button variant="ghost" size="icon">
+                      <User className="w-5 h-5" />
+                    </Button>
+                  </Link>
+                  <Link to="/orders" className="hidden sm:block">
+                    <Button variant="ghost" size="icon">
+                      <History className="w-5 h-5" />
+                    </Button>
+                  </Link>
+                  {isSeller && (
+                    <Link to="/seller/dashboard" className="hidden sm:block">
+                      <Button variant="ghost" size="icon">
+                        <LayoutDashboard className="w-5 h-5" />
+                      </Button>
+                    </Link>
+                  )}
+                  {isAdmin && (
+                    <Link to="/admin/dashboard" className="hidden sm:block">
+                      <Button variant="ghost" size="icon">
+                        <LayoutDashboard className="w-5 h-5" />
+                      </Button>
+                    </Link>
+                  )}
+                  <Button variant="ghost" size="icon" onClick={logout}>
+                    <LogOut className="w-5 h-5" />
+                  </Button>
+                </>
+              ) : (
+                <Button variant="default" size="sm" onClick={() => setShowAuthDialog(true)} className="hidden sm:flex">
+                  <User className="w-4 h-4 mr-2" />
+                  Login
+                </Button>
+              )}
 
               {/* Mobile Menu Toggle */}
               <Button 
@@ -183,15 +277,47 @@ export const Navbar = () => {
                   </Link>
                 ))}
                 <div className="pt-4 border-t border-border">
-                  <Button variant="hero" size="pill" className="w-full">
-                    Shop Now
-                  </Button>
+                  {isAuthenticated ? (
+                    <>
+                      {isSeller && (
+                        <Link to="/seller/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+                          <Button variant="outline" className="w-full mb-2">
+                            <LayoutDashboard className="w-4 h-4 mr-2" />
+                            Dashboard
+                          </Button>
+                        </Link>
+                      )}
+                      <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button variant="outline" className="w-full mb-2">
+                          <User className="w-4 h-4 mr-2" />
+                          My Profile
+                        </Button>
+                      </Link>
+                      <Link to="/orders" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button variant="outline" className="w-full mb-2">
+                          <History className="w-4 h-4 mr-2" />
+                          My Orders
+                        </Button>
+                      </Link>
+                      <Button variant="destructive" className="w-full" onClick={() => { logout(); setIsMobileMenuOpen(false); }}>
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Logout
+                      </Button>
+                    </>
+                  ) : (
+                    <Button variant="hero" size="pill" className="w-full" onClick={() => { setShowAuthDialog(true); setIsMobileMenuOpen(false); }}>
+                      Login / Sign Up
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Auth Dialog */}
+      <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
     </>
   );
 };

@@ -1,38 +1,78 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from 'components/ui/button';
 import { Input } from 'components/ui/input';
 import { ProductCard } from 'components/ProductCard';
-import { products, categories } from 'data/products';
+import { productAPI } from 'services/api';
+import { toast } from 'sonner';
 import { 
   Search, 
   Grid3X3, 
   List,
-  ChevronDown
+  ChevronDown,
+  Loader2
 } from 'lucide-react';
 
+const categories = [
+  'All Products',
+  'Organic Skincare',
+  'Organic Food',
+  'Traditional Textiles',
+  'Artisan Crafts'
+];
+
 export const ProductsPage = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('featured');
   const [viewMode, setViewMode] = useState('grid');
 
+  useEffect(() => {
+    fetchProducts();
+  }, [selectedCategory]);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const params = {};
+      
+      if (selectedCategory !== 'all') {
+        params.category = selectedCategory;
+      }
+      
+      if (searchQuery) {
+        params.search = searchQuery;
+      }
+
+      const data = await productAPI.getAll(params);
+      setProducts(data);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast.error('Failed to load products');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = () => {
+    fetchProducts();
+  };
+
   const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || 
-                           product.category.toLowerCase().includes(selectedCategory.toLowerCase());
-    return matchesSearch && matchesCategory;
+    if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
+    return true;
   });
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
       case 'price-low':
-        return a.price - b.price;
+        return a.basePrice - b.basePrice;
       case 'price-high':
-        return b.price - a.price;
-      case 'rating':
-        return b.rating - a.rating;
+        return b.basePrice - a.basePrice;
       default:
         return 0;
     }
@@ -71,6 +111,7 @@ export const ProductsPage = () => {
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className="pl-12 h-11 rounded-xl"
             />
           </div>
@@ -85,15 +126,15 @@ export const ProductsPage = () => {
             >
               All
             </Button>
-            {categories.map((cat) => (
+            {categories.slice(1).map((cat) => (
               <Button
-                key={cat.id}
-                variant={selectedCategory === cat.name.toLowerCase() ? 'default' : 'ghost'}
+                key={cat}
+                variant={selectedCategory === cat ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setSelectedCategory(cat.name.toLowerCase())}
+                onClick={() => setSelectedCategory(cat)}
                 className="rounded-full"
               >
-                {cat.name}
+                {cat}
               </Button>
             ))}
           </div>
@@ -146,7 +187,12 @@ export const ProductsPage = () => {
         </motion.p>
 
         {/* Products Grid */}
-        {sortedProducts.length > 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <span className="ml-3 text-muted-foreground">Loading products...</span>
+          </div>
+        ) : sortedProducts.length > 0 ? (
           <div className={`grid gap-6 lg:gap-8 ${
             viewMode === 'grid' 
               ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 

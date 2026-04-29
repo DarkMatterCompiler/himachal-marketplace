@@ -1,11 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-// prisma/schema.prisma
-
+// Himachal Marketplace - Complete Schema
 generator client {
   provider = "prisma-client-js"
 }
@@ -16,78 +9,240 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(uuid())
-  email       String   @unique
-  password    String
-  userType    String   // "Buyer" or "Seller"
-  createdAt   DateTime @default(now())
+  id                 String      @id @default(uuid())
+  email              String      @unique
+  passwordHash       String      @map("password_hash")
+  phoneNumber        String?     @map("phone_number")
+  userType           String      @map("user_type") // "BUYER" or "SELLER" or "ADMIN"
+  preferredLanguage  String      @default("en") @map("preferred_language")
+  createdAt          DateTime    @default(now()) @map("created_at")
   
-  // RELATIONSHIP: A User *might* have one seller profile
-  // The '?' means it is optional (Buyers won't have one)
-  sellerProfile Seller?
+  // Relations
+  addresses          Address[]
+  seller             Seller?
+  wishlist           Wishlist[]
+  orders             Order[]     @relation("BuyerOrders")
+  cartItems          CartItem[]
+  
+  @@map("users")
+}
 
-  orders      Order[]
+model Address {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  streetAddress  String   @map("street_address")
+  city           String
+  state          String
+  pincode        String
+  country        String   @default("India")
+  addressType    String   @map("address_type") // "HOME" or "WORK"
+  
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ordersShipped  Order[]
+  
+  @@map("addresses")
 }
 
 model Seller {
-  id          String   @id @default(uuid())
-  bio         String
-  location    String   // e.g., "Kalpa Village, Kinnaur"
-  bankAccount String
-  taxId       String?  // Optional for small farmers
+  id                 String    @id @default(uuid())
+  userId             String    @unique @map("user_id")
+  bio                String
+  locationVillage    String    @map("location_village")
+  bankAccountNumber  String    @map("bank_account_number")
+  ifscCode           String    @map("ifsc_code")
+  sellerType         String    @map("seller_type") // "FARMER" or "CRAFTSMAN"
+  taxId              String?   @map("tax_id")
   
-  // THE LINK: This connects Seller back to User
-  userId      String   @unique // @unique is CRITICAL for 1-to-1 relations
-  user        User     @relation(fields: [userId], references: [id])
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products           Product[]
+  payouts            Payout[]
+  
+  @@map("sellers")
+}
 
-  products    Product[]
+model Category {
+  id              String            @id @default(uuid())
+  categoryName    String            @unique @map("category_name")
+  description     String?
+  
+  products        Product[]
+  commissionRules CommissionRule[]
+  
+  @@map("categories")
+}
+
+model CommissionRule {
+  id                    String    @id @default(uuid())
+  categoryId            String    @map("category_id")
+  commissionPercentage  Float     @map("commission_percentage")
+  fixedFee              Float     @default(0) @map("fixed_fee")
+  activeFromDate        DateTime  @map("active_from_date")
+  activeToDate          DateTime? @map("active_to_date")
+  
+  category              Category  @relation(fields: [categoryId], references: [id])
+  payouts               Payout[]
+  
+  @@map("commission_rules")
 }
 
 model Product {
-  id          String   @id @default(uuid())
+  id          String            @id @default(uuid())
+  sellerId    String            @map("seller_id")
+  categoryId  String            @map("category_id")
   name        String
+  basePrice   Float             @map("base_price")
   description String
-  price       Decimal  // Better than Float for money (more accurate)
-  category    String   // "Fruit", "Handicraft", etc.
-  stock       Int
+  tags        String?
+  imageUrl    String?           @map("image_url") // Added this field
+  createdAt   DateTime          @default(now()) @map("created_at")
   
-
-  // Stores things like { "expiry": "2024-10-10", "sweetness": "High" }
-  attributes  Json     
+  seller      Seller            @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  category    Category          @relation(fields: [categoryId], references: [id])
+  variants    ProductVariant[]
+  wishlist    Wishlist[]
   
-  images      String[] // Array of image URLs
+  @@map("products")
+}
+
+model ProductVariant {
+  id                  String                 @id @default(uuid())
+  productId           String                 @map("product_id")
+  batchNumber         String                 @map("batch_number")
+  manufacturingDate   DateTime               @map("manufacturing_date")
+  expiryDate          DateTime?              @map("expiry_date")
+  stockQuantity       Int                    @map("stock_quantity")
+  isPerishable        Boolean                @map("is_perishable")
+  sku                 String                 @unique
   
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt // Auto-updates when you edit
+  product             Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  authenticitySteps   AuthenticityTimeline[]
+  orderItems          OrderItem[]
+  cartItems           CartItem[]
+  
+  @@map("product_variants")
+}
 
-  // RELATION: Link to Seller
-  sellerId    String
-  seller      Seller   @relation(fields: [sellerId], references: [id])
+model AuthenticityTimeline {
+  id                String          @id @default(uuid())
+  productVariantId  String          @map("product_variant_id")
+  stepName          String          @map("step_name")
+  description       String
+  imageUrl          String?         @map("image_url")
+  timestamp         DateTime        @default(now())
+  locationLatLong   String?         @map("location_lat_long")
+  
+  productVariant    ProductVariant  @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+  
+  @@map("authenticity_timeline")
+}
 
-  orderItems  OrderItem[]
+model Wishlist {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  productId  String   @map("product_id")
+  addedAt    DateTime @default(now()) @map("added_at")
+  
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, productId])
+  @@map("wishlist")
+}
+
+model CartItem {
+  id               String         @id @default(uuid())
+  userId           String         @map("user_id")
+  productVariantId String         @map("product_variant_id")
+  quantity         Int
+  addedAt          DateTime       @default(now()) @map("added_at")
+  
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, productVariantId])
+  @@map("cart_items")
 }
 
 model Order {
-  id          String      @id @default(uuid())
-  userId      String
-  user        User        @relation(fields: [userId], references: [id])
+  id                  String      @id @default(uuid())
+  totalAmount         Float       @map("total_amount")
+  buyerId             String      @map("buyer_id")
+  orderDate           DateTime    @default(now()) @map("order_date")
+  paymentStatus       String      @default("PENDING") @map("payment_status") // "PENDING", "PAID", "FAILED"
+  paymentMethod       String      @default("COD") @map("payment_method") // "COD", "UPI", "CARD"
+  status              String      @default("PENDING_CONFIRMATION") // "PENDING_CONFIRMATION", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"
+  shippingAddressId   String      @map("shipping_address_id")
+  groupId             String?     @map("group_id") // Groups multi-seller orders
   
-  totalAmount Decimal
-  status      String      @default("PENDING") // "PENDING", "COMPLETED"
+  buyer               User        @relation("BuyerOrders", fields: [buyerId], references: [id])
+  shippingAddress     Address     @relation(fields: [shippingAddressId], references: [id])
+  orderItems          OrderItem[]
+  shipment            Shipment?
+  payouts             Payout[]
   
-  items       OrderItem[] // One order has many items
-  
-  createdAt   DateTime    @default(now())
+  @@map("orders")
 }
 
 model OrderItem {
-  id          String   @id @default(uuid())
-  orderId     String
-  order       Order    @relation(fields: [orderId], references: [id])
+  id               String         @id @default(uuid())
+  orderId          String         @map("order_id")
+  productVariantId String         @map("product_variant_id")
+  unitPrice        Float          @map("unit_price")
+  quantity         Int
+  lineTotal        Float          @map("line_total")
   
-  productId   String
-  product     Product  @relation(fields: [productId], references: [id])
+  order            Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id])
+  review           Review?
   
-  quantity    Int
-  price       Decimal  // Price *at the time of sale*
+  @@map("order_items")
+}
+
+model Shipment {
+  id                 String    @id @default(uuid())
+  orderId            String    @unique @map("order_id")
+  status             String    @default("PENDING_PICKUP") // "PENDING_PICKUP", "IN_TRANSIT", "DELIVERED"
+  pickupDate         DateTime? @map("pickup_date")
+  estimatedDelivery  DateTime? @map("estimated_delivery")
+  actualDelivery     DateTime? @map("actual_delivery")
+  carrierName        String?   @map("carrier_name")
+  trackingNumber     String?   @map("tracking_number")
+  
+  order              Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  @@map("shipments")
+}
+
+model Payout {
+  id                       String          @id @default(uuid())
+  sellerId                 String          @map("seller_id")
+  orderId                  String          @map("order_id")
+  grossAmount              Float           @map("gross_amount")
+  commissionRuleAppliedId  String          @map("commission_rule_applied_id")
+  platformFeeDeducted      Float           @map("platform_fee_deducted")
+  taxDeducted              Float           @default(0) @map("tax_deducted")
+  netPayable               Float           @map("net_payable")
+  status                   String          @default("PENDING") // "PENDING", "PROCESSING", "PAID"
+  paymentReference         String?         @map("payment_reference")
+  paidAt                   DateTime?       @map("paid_at")
+  dueDate                  DateTime        @map("due_date")
+  createdAt                DateTime        @default(now()) @map("created_at")
+  
+  seller                   Seller          @relation(fields: [sellerId], references: [id])
+  order                    Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  commissionRule           CommissionRule  @relation(fields: [commissionRuleAppliedId], references: [id])
+  
+  @@map("payouts")
+}
+
+model Review {
+  id            String    @id @default(uuid())
+  orderItemId   String    @unique @map("order_item_id")
+  rating        Int       // 1-5
+  comment       String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  
+  orderItem     OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  
+  @@map("reviews")
 }

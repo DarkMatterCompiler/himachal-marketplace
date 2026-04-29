@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from 'components/ui/button';
 import { Card } from 'components/ui/card';
 import { Badge } from 'components/ui/badge';
 import { products } from 'data/products';
 import { useTheme } from 'context/ThemeContext';
+import { useAuth } from 'context/AuthContext';
+import { cartAPI } from 'services/api';
+import { toast } from 'sonner';
 import { 
   ArrowLeft, 
   Heart, 
@@ -20,7 +23,8 @@ import {
   MapPin,
   User,
   ChevronRight,
-  Check
+  Check,
+  Loader2
 } from 'lucide-react';
 
 // Icon mapping for journey steps
@@ -52,14 +56,38 @@ const journeyIcons = {
 
 export const ProductDetailPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { theme } = useTheme();
+  const { isAuthenticated } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('journey');
+  const [addingToCart, setAddingToCart] = useState(false);
 
   // Find the product
   const product = products.find(p => p.id === parseInt(id)) || products[0];
+
+  const handleAddToCart = async () => {
+    if (!isAuthenticated) {
+      toast.error('Please login to add items to cart');
+      return;
+    }
+
+    setAddingToCart(true);
+    try {
+      // For demo purposes, using product ID as variant ID
+      await cartAPI.add(product.id, quantity);
+      toast.success(`Added ${quantity} ${quantity === 1 ? 'item' : 'items'} to cart`);
+      // Trigger cart count refresh by dispatching custom event
+      window.dispatchEvent(new Event('cartUpdated'));
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast.error(error.response?.data?.error || 'Failed to add to cart');
+    } finally {
+      setAddingToCart(false);
+    }
+  };
 
   // Mock additional images
   const productImages = [
@@ -286,9 +314,20 @@ export const ProductDetailPage = () => {
                 variant="hero" 
                 size="pill" 
                 className="flex-1 gap-2 text-base h-14"
+                onClick={handleAddToCart}
+                disabled={addingToCart}
               >
-                <ShoppingBag className="w-5 h-5" />
-                Add to Cart — ₹{(product.price * quantity).toLocaleString()}
+                {addingToCart ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <ShoppingBag className="w-5 h-5" />
+                    Add to Cart — ₹{(product.price * quantity).toLocaleString()}
+                  </>
+                )}
               </Button>
             </div>
 
